@@ -1,0 +1,13 @@
+\nCREATE TABLE IF NOT EXISTS permit_to_work (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  permit_number text UNIQUE NOT NULL,\n  work_type text NOT NULL,\n  work_description text,\n  work_location text NOT NULL,\n  risk_level text NOT NULL DEFAULT 'medium',\n  status text NOT NULL DEFAULT 'pending',\n  permit_holder_name text,\n  requested_by uuid REFERENCES profiles(id),\n  approved_by uuid REFERENCES profiles(id),\n  valid_from timestamptz,\n  valid_until timestamptz,\n  created_at timestamptz DEFAULT now(),\n  updated_at timestamptz DEFAULT now()\n);
+\n\nALTER TABLE permit_to_work ENABLE ROW LEVEL SECURITY;
+\n\nCREATE POLICY "select_ptw" ON permit_to_work FOR SELECT TO authenticated USING (true);
+\nCREATE POLICY "insert_ptw" ON permit_to_work FOR INSERT TO authenticated WITH CHECK (auth.uid() = requested_by);
+\nCREATE POLICY "update_ptw" ON permit_to_work FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+\nCREATE POLICY "delete_ptw" ON permit_to_work FOR DELETE TO authenticated USING (auth.uid() = requested_by);
+\n\nCREATE TABLE IF NOT EXISTS incident_reports (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  incident_number text UNIQUE NOT NULL,\n  incident_type text NOT NULL,\n  title text NOT NULL,\n  description text,\n  location text NOT NULL,\n  severity text NOT NULL DEFAULT 'medium',\n  status text NOT NULL DEFAULT 'open',\n  incident_date timestamptz,\n  reported_by uuid REFERENCES profiles(id),\n  investigated_by uuid REFERENCES profiles(id),\n  created_at timestamptz DEFAULT now(),\n  updated_at timestamptz DEFAULT now()\n);
+\n\nALTER TABLE incident_reports ENABLE ROW LEVEL SECURITY;
+\n\nCREATE POLICY "select_incidents" ON incident_reports FOR SELECT TO authenticated USING (true);
+\nCREATE POLICY "insert_incidents" ON incident_reports FOR INSERT TO authenticated WITH CHECK (auth.uid() = reported_by);
+\nCREATE POLICY "update_incidents" ON incident_reports FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+\nCREATE POLICY "delete_incidents" ON incident_reports FOR DELETE TO authenticated USING (auth.uid() = reported_by);
+\n;

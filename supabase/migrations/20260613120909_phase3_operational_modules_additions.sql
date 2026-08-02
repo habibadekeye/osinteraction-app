@@ -1,0 +1,11 @@
+\n-- ============================================================\n-- PHASE 3: Operational Modules schema additions\n-- ============================================================\n\n-- Fix observations: make user_id nullable for anonymous submissions\nALTER TABLE observations ALTER COLUMN user_id DROP NOT NULL;
+\nALTER TABLE observations ALTER COLUMN user_id DROP DEFAULT;
+\nALTER TABLE observations ADD COLUMN IF NOT EXISTS is_anonymous boolean NOT NULL DEFAULT false;
+\n\n-- Update observations RLS: allow anonymous inserts\nDROP POLICY IF EXISTS "observations_insert" ON observations;
+\nCREATE POLICY "observations_insert" ON observations FOR INSERT TO authenticated\n  WITH CHECK (\n    (is_anonymous = false AND auth.uid() = user_id)\n    OR (is_anonymous = true AND user_id IS NULL)\n  );
+\n\n-- Add AI fields to incident_reports\nALTER TABLE incident_reports ADD COLUMN IF NOT EXISTS ai_analysis text;
+\nALTER TABLE incident_reports ADD COLUMN IF NOT EXISTS root_causes text[] DEFAULT '{}';
+\nALTER TABLE incident_reports ADD COLUMN IF NOT EXISTS corrective_actions text[] DEFAULT '{}';
+\n\n-- Add AI requirements checklist to permit_to_work\nALTER TABLE permit_to_work ADD COLUMN IF NOT EXISTS preconditions_met boolean[] DEFAULT '{}';
+\nALTER TABLE permit_to_work ADD COLUMN IF NOT EXISTS prerequisites_checklist jsonb DEFAULT '[]';
+\n;
